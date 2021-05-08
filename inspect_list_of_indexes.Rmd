@@ -1,0 +1,61 @@
+---
+title: "Inspect a list of indexes"
+output: html_notebook
+---
+This notebook is designed to inspect a list of index. 
+
+### Loading package
+```{r}
+library(stringr)
+library(vwr)
+library(reshape2)
+library(ggplot2)       
+library(viridis)
+library(dplyr)
+```
+
+### Loading data
+User should prepare a file with no header, all capitalized, same length, with A T C or G, only as the input.
+```{r}
+input.index.seq <- c(
+  "TAAGGCGA",
+  "CGTACTAG",
+  "AGGCAGAA",
+  "TCCTGAGC",
+  "GGACTCCT",
+  "TAGGCATG",
+  "CTCTCTAC",
+  "CAGAGAGG",
+  "GCTACGCT",
+  "CGAGGCTG",
+  "AAGAGGCA",
+  "GTAGAGGA",
+  "GCTCATGA",
+  "ATCTCAGG",
+  "ACTCGCTA",
+  "GGAGCTAC",
+  "GCGTAGTA",
+  "CGGAGCCT",
+  "TACGCTGC",
+  "ATGCGCAG",
+  "TAGCGCTC",
+  "ACTGAGCG",
+  "CCTAAGAC",
+  "CGATCAGT",
+  "TGCAGCTA",
+  "TCGACGTC"
+)
+
+
+```
+
+### generating plot
+```{r}
+ld_mtx <- sapply(input.index.seq,levenshtein.distance,targets = input.index.seq)
+ld.df <- melt(ld_mtx)
+plot.heatmap <- ggplot(ld.df,aes(Var1,Var2))
+plot.heatmap + geom_tile(aes(fill=value)) +
+  theme(axis.text.x = element_blank(),axis.text.y = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())+
+  scale_fill_viridis()
+```
+
