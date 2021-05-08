@@ -9,7 +9,7 @@ R markdown notebooks are used because so that user can knit a document by supply
 For use of notebooks, please see the instructions within the notebook document. 
 
 ## Thoughts
-This repo is only intended for exploration. As there are sets of indexes already generated and can be purchased from various company, there are little reason to generate a new set of not validated indexes. Instead, the value of this repo is to verify the incoming list index, such that we can make sure that the set of indexes are well within user-defined threshold.
+This repo is only intended for exploration. As there are sets of indexes already generated and can be purchased from various companies, there are little reason to generate a new set of not validated indexes. Instead, the value of this repo is to verify the incoming list index, such that we can make sure that the set of indexes are well within user-defined threshold.
 In brief, please treat it as a validation tool, instead of a index-generator. 
 
 ## TODOs
