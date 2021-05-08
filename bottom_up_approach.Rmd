@@ -74,17 +74,18 @@ printAllKLengthRec <- function(set,prefix,n,k){
 
 capture.output(printAllKLength(possible_choice,lenght_index), file = "eight_mer.txt", append = TRUE)
 eight_mer <- read.table("eight_mer.txt", quote="\"", comment.char="")
-eight_mer.vector <- eight_mer$V1
+eight_mer.vector <- as.character(eight_mer$V1)
 ```
 
 ### Create the pool 
 Randomly pick a starter index. Then, pick a new index and validate it , if pass all metrics, add it to the list. Repeat until reaching the number of index.  
 ```{r}
 library(rlist)
-target.index.number <-20
+target.index.number <-384
 GC.min <-0.3
 GC.max <-0.7
-runs.max <- 4
+runs.max <- 2
+ld_threshold <- 3
 output.vector =c()
 
 ### prefilter the possible option using the GC and runs
@@ -94,16 +95,46 @@ eight_mer.df <-data.frame(eight_mer.gc,eight_mer.repeat)
 library(dplyr)
 eight_mer.df %>%  filter(eight_mer.gc >GC.min) %>% filter(eight_mer.gc <GC.max) %>% filter(eight_mer.repeat <=runs.max) -> eight_mer.pass.filter.df
 eight_mer.pass.filter.vector <- rownames(eight_mer.pass.filter.df)
+names(eight_mer.pass.filter.vector) <- eight_mer.pass.filter.vector
 ### picking a starter, put it in a list
 set.seed(92814)
 starter <- sample(eight_mer.pass.filter.vector,size = 1)
-list.append(output.vector,starter)
+output.vector<-list.append(output.vector,starter)
+
 ### start the loop
-while (lenght(output.vector) < target.index.number){
+while (length(output.vector) < target.index.number){
   ### pick a new index
   new <- sample(eight_mer.pass.filter.vector,size = 1)
   ### validate the distance 
+  new_ld <- levenshtein.distance(xsource = new, targets = output.vector)
+  if(all(new_ld >= ld_threshold)){
+    ### this is a valid index, add it to the list output.vector
+    output.vector<-list.append(output.vector,new)
+    
+  }
 }
 
+```
+
+### Inspect the quality of the set of indexes
+
+```{r}
+ld_mtx <- sapply(output.vector,levenshtein.distance,targets = output.vector)
+ld.df <- melt(ld_mtx)
+plot.heatmap <- ggplot(ld.df,aes(Var1,Var2))
+plot.heatmap + geom_tile(aes(fill=value)) +
+  theme(axis.text.x = element_blank(),axis.text.y = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())+
+  scale_fill_viridis()
+hist(ld.df$value)
+
+input.index.gc <- sapply(output.vector, check_gc)
+input.index.repeat <- sapply(output.vector, check_repeat)
+input.index.df <-data.frame(input.index.gc,input.index.repeat)
+
+hist(input.index.df$input.index.gc)
+summary(input.index.df$input.index.gc)
+hist(input.index.df$input.index.repeat)
+summary(input.index.df$input.index.repeat)
+input.index.df %>% filter(input.index.repeat >=4)
 ```
 
