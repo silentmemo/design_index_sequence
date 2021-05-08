@@ -1,11 +1,22 @@
 ---
 title: "Inspect a list of indexes"
-output: html_notebook
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+params:
+  input_path:
+    label: 'Please provide a valid path to the input index file to be inspected:'
+    value: ./IDT_for_Illumina_UDI_I7_RC.txt
+    input: text
 ---
+
+
 This notebook is designed to inspect a list of index. 
 
 ### Loading package
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(stringr)
 library(vwr)
 library(reshape2)
@@ -17,39 +28,14 @@ library(dplyr)
 ### Loading data
 User should prepare a file with no header, all capitalized, same length, with A T C or G, only as the input.
 ```{r}
-input.index.seq <- c(
-  "TAAGGCGA",
-  "CGTACTAG",
-  "AGGCAGAA",
-  "TCCTGAGC",
-  "GGACTCCT",
-  "TAGGCATG",
-  "CTCTCTAC",
-  "CAGAGAGG",
-  "GCTACGCT",
-  "CGAGGCTG",
-  "AAGAGGCA",
-  "GTAGAGGA",
-  "GCTCATGA",
-  "ATCTCAGG",
-  "ACTCGCTA",
-  "GGAGCTAC",
-  "GCGTAGTA",
-  "CGGAGCCT",
-  "TACGCTGC",
-  "ATGCGCAG",
-  "TAGCGCTC",
-  "ACTGAGCG",
-  "CCTAAGAC",
-  "CGATCAGT",
-  "TGCAGCTA",
-  "TCGACGTC"
-)
+input.file.path <- params$input_path
+input.file <- read.table(input.file.path,quote="\"", comment.char="")
+input.index.seq <- input.file$V1
 
 
 ```
 
-### generating plot
+### Generating Heatmap
 ```{r}
 ld_mtx <- sapply(input.index.seq,levenshtein.distance,targets = input.index.seq)
 ld.df <- melt(ld_mtx)
@@ -57,5 +43,57 @@ plot.heatmap <- ggplot(ld.df,aes(Var1,Var2))
 plot.heatmap + geom_tile(aes(fill=value)) +
   theme(axis.text.x = element_blank(),axis.text.y = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())+
   scale_fill_viridis()
+```
+
+### Statistic on the edit distance
+
+```{r}
+hist(ld.df$value)
+ld.df %>% filter(value == 0) %>% nrow() -> num.ld.zero 
+ld.df %>% filter(value == 1) %>% nrow() -> num.ld.one 
+ld.df %>% filter(value == 2) %>% nrow() -> num.ld.two
+ld.df %>% filter(value == 3) %>% nrow() -> num.ld.three
+```
+### Other quality metrics on the index, GC, repeats
+
+```{r}
+check_gc <- function(inputString){
+  full.length = str_length(inputString)  
+  G.count <-  str_count(inputString, "G")
+  C.count <-  str_count(inputString,"C")
+  return((G.count+C.count)/full.length)
+}
+check_repeat <- function(inputString) {
+  
+  possible_choice <- c("A", "T", "C", "G")
+  full.length = str_length(inputString)
+  chr.list = str_split(inputString, pattern = "", simplify = TRUE)
+  max.counter =1
+  for (base in possible_choice) {
+    counter = 1
+    for (i in seq(length(chr.list) - 1)) {
+      if (chr.list[i] != chr.list[i + 1]) {
+        next
+      } else if(base == chr.list[i]){
+        counter = counter + 1
+        
+      }
+      if(counter >= max.counter){
+        max.counter = counter
+      }
+    }
+
+  }
+  return(max.counter)
+}
+input.index.gc <- sapply(input.index.seq, check_gc)
+input.index.repeat <- sapply(input.index.seq, check_repeat)
+input.index.df <-data.frame(input.index.gc,input.index.repeat)
+
+hist(input.index.df$input.index.gc)
+summary(input.index.df$input.index.gc)
+hist(input.index.df$input.index.repeat)
+summary(input.index.df$input.index.repeat)
+input.index.df %>% filter(input.index.repeat >=4)
 ```
 
