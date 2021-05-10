@@ -14,4 +14,4 @@ In brief, please treat it as a validation tool, instead of a index-generator.
 
 ## TODOs
 1. The way the run of bases are calculated will consider broken up repeats as runs, which may be too conservative and do not accurately represent the run of bases in the index.
-2. Infinite-monkey way of identifying sets of indexes is not efficient. Instead, a bottom up approach in generating a set of indexes based on a set of rules may be more appropriate. 
+~~2. Infinite-monkey way of identifying sets of indexes is not efficient. Instead, a bottom up approach in generating a set of indexes based on a set of rules may be more appropriate. 
